@@ -1,66 +1,118 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 
-export const useTodos = () => {
+const API_BASE = 'https://dummyjson.com';
+
+export function useTodos() {
   const [todos, setTodos] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Завантаження todos при монтуванні
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limitPerPage, setLimitPerPage] = useState(10);
+  const [totalTodos, setTotalTodos] = useState(0);
+
+  // Search
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchTodos = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const skip = (currentPage - 1) * limitPerPage;
+      const res = await axios.get(`${API_BASE}/todos?limit=${limitPerPage}&skip=${skip}`);
+      const payload = res.data.todos ?? [];
+      setTodos(payload);
+      setTotalTodos(res.data.total ?? payload.length);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, limitPerPage]);
+
   useEffect(() => {
-    const fetchTodos = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch("https://dummyjson.com/todos?limit=10");
-        const data = await res.json();
-        setTodos(data.todos); // data.todos – масив обʼєктів
-      } catch (err) {
-        setError(err.message || "Error fetching todos");
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchTodos();
+  }, [fetchTodos]);
+
+  const toggleTodo = useCallback(async (id) => {
+    const current = todos.find(t => t.id === id);
+    if (!current) return;
+    const updated = { ...current, completed: !current.completed };
+    setTodos(prev => prev.map(t => t.id === id ? updated : t));
+    try {
+      await axios.put(`${API_BASE}/todos/${id}`, { completed: updated.completed });
+    } catch (err) {
+      setError(err);
+      fetchTodos();
+    }
+  }, [todos, fetchTodos]);
+
+  const deleteTodo = useCallback(async (id) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await axios.delete(`${API_BASE}/todos/${id}`);
+      setTodos(prev => prev.filter(t => t.id !== id));
+      setTotalTodos(prev => prev - 1);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Додавання нового todo (клієнтська частина)
-  const addTodo = (title) => {
+  const addTodo = useCallback((text) => {
+    if (!text.trim()) return;
     const newTodo = {
       id: Date.now(),
-      todo: title,
-      completed: false
+      todo: text.trim(),
+      completed: false,
+      userId: 1
     };
     setTodos(prev => [newTodo, ...prev]);
-  };
+    setTotalTodos(prev => prev + 1);
+  }, []);
 
-  // Toggle completed
-  const toggleTodo = async (id) => {
-    const todo = todos.find(t => t.id === id);
-    if (!todo) return;
-
-    const updatedTodo = { ...todo, completed: !todo.completed };
-    setTodos(prev => prev.map(t => (t.id === id ? updatedTodo : t)));
-
-    // PUT-запит для імітації backend
+  const editTodoTitle = useCallback(async (id, newTitle) => {
+    if (!newTitle.trim()) return;
+    setTodos(prev => prev.map(t => t.id === id ? { ...t, todo: newTitle } : t));
     try {
-      await fetch(`https://dummyjson.com/todos/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ completed: updatedTodo.completed })
-      });
+      await axios.put(`${API_BASE}/todos/${id}`, { todo: newTitle });
     } catch (err) {
-      setError(err.message);
+      setError(err);
+      fetchTodos();
     }
+  }, [fetchTodos]);
+
+  const goToNextPage = () => {
+    if (currentPage * limitPerPage >= totalTodos) return;
+    setCurrentPage(prev => prev + 1);
   };
 
-  // Видалення todo
-  const deleteTodo = async (id) => {
-    setTodos(prev => prev.filter(t => t.id !== id));
-    try {
-      await fetch(`https://dummyjson.com/todos/${id}`, { method: "DELETE" });
-    } catch (err) {
-      setError(err.message);
-    }
+  const goToPrevPage = () => {
+    if (currentPage === 1) return;
+    setCurrentPage(prev => prev - 1);
   };
 
-  return { todos, isLoading, error, addTodo, toggleTodo, deleteTodo };
-};
+  return {
+    todos: todos.filter(t => t.todo.toLowerCase().includes(searchTerm.toLowerCase())),
+    isLoading,
+    error,
+    fetchTodos,
+    addTodo,
+    toggleTodo,
+    deleteTodo,
+    editTodoTitle,
+    currentPage,
+    limitPerPage,
+    totalTodos,
+    setSearchTerm,
+    setLimitPerPage,
+    goToNextPage,
+    goToPrevPage,
+  };
+}
+
+export default useTodos;
