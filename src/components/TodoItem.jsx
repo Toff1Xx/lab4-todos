@@ -1,19 +1,19 @@
-// src/components/TodoItem.jsx
-import React from 'react';
-
-export default function TodoItem({ todo, onToggle, onDelete }) {
+const TodoItem = ({ todo, toggleTodo, deleteTodo }) => {
   return (
-    <li className={`todo-item ${todo.completed ? 'completed' : ''}`} style={{display:'flex', alignItems:'center', gap: '8px', padding:'6px 0'}}>
+    <li>
       <input
         type="checkbox"
-        checked={!!todo.completed}
-        onChange={onToggle}
-        aria-label={`Toggle todo ${todo.id}`}
+        checked={todo.completed}
+        onChange={() => toggleTodo(todo.id)}
       />
-      <span style={{flex:1, wordBreak:'break-word'}}>
-        {todo.todo}
-      </span>
-      <button onClick={onDelete} aria-label={`Delete todo ${todo.id}`}>Delete</button>
+      <div className="todo-content">
+        <span className={todo.completed ? "completed" : ""}>{todo.todo}</span>
+        <button className="delete-btn" onClick={() => deleteTodo(todo.id)}>
+          Delete
+        </button>
+      </div>
     </li>
   );
-}
+};
+
+export default TodoItem;

@@ -1,89 +1,66 @@
-// src/hooks/useTodos.js
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
 
-const API_BASE = 'https://dummyjson.com'; // або інший fake api
-
-export function useTodos() {
+export const useTodos = () => {
   const [todos, setTodos] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchTodos = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await axios.get(`${API_BASE}/todos`); // DummyJSON повертає { todos: [...] }
-      const payload = res.data.todos ?? res.data;
-      setTodos(Array.isArray(payload) ? payload : []);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
+  // Завантаження todos при монтуванні
   useEffect(() => {
+    const fetchTodos = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch("https://dummyjson.com/todos?limit=10");
+        const data = await res.json();
+        setTodos(data.todos); // data.todos – масив обʼєктів
+      } catch (err) {
+        setError(err.message || "Error fetching todos");
+      } finally {
+        setIsLoading(false);
+      }
+    };
     fetchTodos();
-  }, [fetchTodos]);
-
-  const toggleTodo = useCallback(async (id) => {
-    setIsLoading(true);
-    setError(null);
-    const current = todos.find(t => t.id === id);
-    if (!current) { setIsLoading(false); return; }
-    const updated = { ...current, completed: !current.completed };
-
-    // Оптимістичне оновлення UI:
-    setTodos(prev => prev.map(t => t.id === id ? updated : t));
-
-    try {
-      await axios.put(`${API_BASE}/todos/${id}`, { completed: updated.completed });
-      // Якщо API повертає оновлений об'єкт, можна оновити ще раз:
-      // const res = await axios.put(...); setTodos(prev => prev.map(t => t.id === id ? res.data : t));
-    } catch (err) {
-      // при помилці – відкотити (або перезапросити)
-      setError(err);
-      await fetchTodos();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [todos, fetchTodos]);
-
-  const deleteTodo = useCallback(async (id) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      await axios.delete(`${API_BASE}/todos/${id}`);
-      setTodos(prev => prev.filter(t => t.id !== id));
-    } catch (err) {
-      setError(err);
-    } finally {
-      setIsLoading(false);
-    }
   }, []);
 
-  // Додавання локально (щоб задовольнити acceptance criteria)
-  const addTodo = useCallback((text) => {
-    if (!text || !text.trim()) return;
+  // Додавання нового todo (клієнтська частина)
+  const addTodo = (title) => {
     const newTodo = {
-      id: Date.now(),      // локальний id
-      todo: text.trim(),
-      completed: false,
-      userId: 1
+      id: Date.now(),
+      todo: title,
+      completed: false
     };
     setTodos(prev => [newTodo, ...prev]);
-  }, []);
-
-  return {
-    todos,
-    isLoading,
-    error,
-    fetchTodos,   // корисно для manual refresh
-    addTodo,
-    toggleTodo,
-    deleteTodo,
   };
-}
 
-export default useTodos;
+  // Toggle completed
+  const toggleTodo = async (id) => {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+
+    const updatedTodo = { ...todo, completed: !todo.completed };
+    setTodos(prev => prev.map(t => (t.id === id ? updatedTodo : t)));
+
+    // PUT-запит для імітації backend
+    try {
+      await fetch(`https://dummyjson.com/todos/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: updatedTodo.completed })
+      });
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Видалення todo
+  const deleteTodo = async (id) => {
+    setTodos(prev => prev.filter(t => t.id !== id));
+    try {
+      await fetch(`https://dummyjson.com/todos/${id}`, { method: "DELETE" });
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return { todos, isLoading, error, addTodo, toggleTodo, deleteTodo };
+};

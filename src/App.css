@@ -1,50 +1,132 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: #213547;
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #f7f7f7;
+}
+
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  width: 600px;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+h1 {
+  font-size: 2em;
+  margin-bottom: 20px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.input-group {
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+input[type="text"] {
+  flex: 2; /* більше місця для вводу тексту */
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-.todo-item.completed span {
-  text-decoration: line-through;
-  color: #888;
-  opacity: 0.8;
-}
 button {
+  border-radius: 6px;
+  border: 1px solid transparent;
+  padding: 8px 14px;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #007bff;
+  color: white;
   cursor: pointer;
+  transition: background-color 0.25s, transform 0.1s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* текст зліва, кнопка справа */
+  padding: 8px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+li span {
+  flex: 1; /* текст займає весь простір */
+  word-wrap: break-word;
+}
+
+.completed {
+  text-decoration: line-through;
+  color: gray;
+}
+
+button.delete-btn {
+  background-color: #dc3545;
+  width: 100px; /* фіксована ширина */
+  flex-shrink: 0;
+}
+
+button.delete-btn:hover {
+  background-color: #b02a37;
+}
+li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px; /* відступ між чекбоксом і текст+кнопка */
+  padding: 8px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.todo-content {
+  display: flex;
+  flex-wrap: wrap; /* дозволяє перенос рядків */
+  align-items: flex-start;
+  gap: 10px; /* відступ між текстом і кнопкою */
+  flex: 1;
+}
+
+.todo-content span {
+  flex: 1 1 auto; /* текст займає весь доступний простір і переноситься */
+  word-wrap: break-word;
+}
+
+button.delete-btn {
+  width: 100px; /* фіксована ширина кнопки */
+  flex-shrink: 0; /* кнопка не стискається */
 }

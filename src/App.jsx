@@ -1,11 +1,9 @@
-// src/App.jsx
-import React from 'react';
-import TodoList from './components/TodoList';
-import './styles.css';
+import React from "react";
+import TodoList from "./components/TodoList";
+import "./App.css"; // створити цей файл або закоментуй
 
-function App(){
+function App() {
   return <TodoList />;
 }
 
 export default App;
-
